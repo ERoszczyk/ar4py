@@ -7,5 +7,7 @@
 
     $ heroku create
     $ git push heroku master
+    
+    app is hosted on: https://ar4py.herokuapp.com/
 
 
