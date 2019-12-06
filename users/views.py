@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from django.shortcuts import render
+from django.utils import timezone
 from django.views import View
 from rest_framework import permissions, status
 from rest_framework.decorators import action
@@ -39,6 +40,5 @@ class AppointmentsViewSet(ModelViewSet):
     @action(detail=False, methods=['get'])
     def next(self, request):
         # print(self.request.query_params) Maybe we will need to add here authorization
-        obj = self.queryset.filter(date__gte=datetime.now()).first()
-        return Response({"current_date": datetime.now(), "next_appointment": self.serializer_class(obj).data},
-                        status.HTTP_200_OK)
+        obj = self.queryset.filter(date__gte=timezone.localtime(timezone.now()).first())
+        return Response({"next_appointment": self.serializer_class(obj).data}, status.HTTP_200_OK)
