@@ -1,6 +1,14 @@
+##Panel Admina
+https://ar4py.herokuapp.com/admin/
+Dane do zalogowania na konwersacji
 
-## Deployment to Heroku
+##API
+https://ar4py.herokuapp.com/api/ 
+#### Wizyty:
+https://ar4py.herokuapp.com/api/appointments/
 
-    app is hosted on: https://ar4py.herokuapp.com/
-
-
+| Metoda | Adres                   |  Opis                       |
+| :----: |:-----------------------:| :--------------------------:|
+| GET    | /api/appointments/      | Lista wszystkich wizyt      |
+| POST   | /api/appointments/      | Utworzenie nowej wizyty     |
+| GET    | /api/appointments/next/ | Pokazanie następnej wizyty  |
