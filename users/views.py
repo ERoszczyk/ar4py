@@ -38,6 +38,7 @@ class AppointmentsViewSet(ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def next(self, request):
+        # print(self.request.query_params) Maybe we will need to add here authorization
         obj = self.queryset.filter(date__gte=datetime.now()).first()
         return Response({"current_date": datetime.now(), "next_appointment": self.serializer_class(obj).data},
                         status.HTTP_200_OK)
