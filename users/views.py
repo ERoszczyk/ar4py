@@ -3,7 +3,7 @@ from datetime import datetime
 from django.shortcuts import render
 from django.utils import timezone
 from django.views import View
-from rest_framework import permissions, status
+from rest_framework import permissions, status, serializers
 from rest_framework.decorators import action
 from rest_framework.generics import CreateAPIView, RetrieveAPIView
 from rest_framework.response import Response
@@ -20,6 +20,20 @@ class StudentSerializer(ModelSerializer):
         fields = '__all__'
 
 
+class AppointmentCreateSerializer(serializers.Serializer):
+    first_name = serializers.CharField(max_length=100, required=True)
+    last_name = serializers.CharField(max_length=100, required=True)
+    date = serializers.DateTimeField(required=True)
+
+    class Meta:
+        fields = ["first_name", "last_name", "date"]
+
+    def create(self, validated_data):
+        student_data = {"first_name": validated_data.pop('first_name'), "last_name": validated_data.pop("last_name")}
+        student, created = Student.objects.get_or_create(**student_data)
+        return Appointment.objects.create(student=student, **validated_data)
+
+
 class AppointmentSerializer(ModelSerializer):
     student = StudentSerializer()
 
@@ -27,18 +41,21 @@ class AppointmentSerializer(ModelSerializer):
         model = Appointment
         fields = '__all__'
 
-    def create(self, validated_data):
-        student_data = validated_data.pop('student')
-        student, created = Student.objects.get_or_create(**student_data)
-        return Appointment.objects.create(student=student, **validated_data)
-
 
 class AppointmentsViewSet(ModelViewSet):
-    serializer_class = AppointmentSerializer
     queryset = Appointment.objects.all()
+
+    def get_serializer_class(self):
+        return AppointmentCreateSerializer if self.action == 'create' else AppointmentSerializer
 
     @action(detail=False, methods=['get'])
     def next(self, request):
         # print(self.request.query_params) Maybe we will need to add here authorization
         obj = self.queryset.filter(date__gte=timezone.localtime(timezone.now()).first())
         return Response({"next_appointment": self.serializer_class(obj).data}, status.HTTP_200_OK)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        obj = self.perform_create(serializer)
+        return Response(AppointmentSerializer(self.queryset, many=True).data, status=status.HTTP_201_CREATED)
