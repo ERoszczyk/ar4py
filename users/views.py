@@ -63,5 +63,5 @@ class AppointmentsViewSet(ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        obj = self.perform_create(serializer)
+        obj = serializer.save()
         return Response({'msg': obj.id}, status=status.HTTP_201_CREATED)
