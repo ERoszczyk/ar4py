@@ -50,12 +50,18 @@ class AppointmentsViewSet(ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def next(self, request):
-        # print(self.request.query_params) Maybe we will need to add here authorization
-        obj = self.queryset.filter(date__gte=timezone.localtime(timezone.now()).first())
-        return Response({"next_appointment": self.serializer_class(obj).data}, status.HTTP_200_OK)
+        obj = self.queryset.filter(is_active=True).order_by('date').first()
+        print(obj)
+        if obj:
+            response = Response({"next_appointment": self.get_serializer_class()(obj).data}, status.HTTP_200_OK)
+            obj.is_active = False
+            obj.save()
+        else:
+            response = Response({"msg": 'No more appointments'}, status.HTTP_400_BAD_REQUEST)
+        return response
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         obj = self.perform_create(serializer)
-        return Response(AppointmentSerializer(self.queryset, many=True).data, status=status.HTTP_201_CREATED)
+        return Response({'msg': obj.id}, status=status.HTTP_201_CREATED)

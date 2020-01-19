@@ -15,7 +15,7 @@ class Student(models.Model):
 class Appointment(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
     date = models.DateTimeField()
-    number_in_queue = models.SmallIntegerField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return f'{self.student} Appointment {self.date}'
