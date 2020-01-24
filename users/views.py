@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.shortcuts import render
 from django.utils import timezone
@@ -12,6 +12,7 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
 from users.models import Appointment, Student
+from users.utils import next_time_interval
 
 
 class StudentSerializer(ModelSerializer):
@@ -31,7 +32,13 @@ class AppointmentCreateSerializer(serializers.Serializer):
     def create(self, validated_data):
         student_data = {"first_name": validated_data.pop('first_name'), "last_name": validated_data.pop("last_name")}
         student, created = Student.objects.get_or_create(**student_data)
-        return Appointment.objects.create(student=student, **validated_data)
+        scheduled_date = next_time_interval(validated_data.get('date'))
+        obj = Appointment.objects.filter(scheduled_date=scheduled_date).first()
+        while obj:
+            scheduled_date += timedelta(minutes=5)
+            obj = Appointment.objects.filter(scheduled_date=scheduled_date).first()
+
+        return Appointment.objects.create(student=student, **validated_data, scheduled_date=scheduled_date)
 
 
 class AppointmentSerializer(ModelSerializer):
@@ -51,7 +58,6 @@ class AppointmentsViewSet(ModelViewSet):
     @action(detail=False, methods=['get'])
     def next(self, request):
         obj = self.queryset.filter(is_active=True).order_by('date').first()
-        print(obj)
         if obj:
             response = Response({"next_appointment": self.get_serializer_class()(obj).data}, status.HTTP_200_OK)
             obj.is_active = False
@@ -64,4 +70,4 @@ class AppointmentsViewSet(ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         obj = serializer.save()
-        return Response({'msg': obj.id}, status=status.HTTP_201_CREATED)
+        return Response({'msg': f'{obj.id} Godzina wizyty: {obj.scheduled_date}'}, status=status.HTTP_201_CREATED)

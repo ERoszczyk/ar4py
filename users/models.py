@@ -16,6 +16,7 @@ class Appointment(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
     date = models.DateTimeField()
     is_active = models.BooleanField(default=True)
+    scheduled_date = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
-        return f'{self.student} Appointment {self.date}'
+        return f'{self.student} Appointment {self.scheduled_date}'
