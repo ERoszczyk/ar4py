@@ -57,7 +57,7 @@ class AppointmentsViewSet(ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def next(self, request):
-        obj = self.queryset.filter(is_active=True).order_by('date').first()
+        obj = self.queryset.filter(is_active=True).order_by('scheduled_date').first()
         if obj:
             response = Response({"next_appointment": self.get_serializer_class()(obj).data}, status.HTTP_200_OK)
             obj.is_active = False
